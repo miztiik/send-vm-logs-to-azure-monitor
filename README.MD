@@ -5,11 +5,16 @@ Can you show them how the can get started ?
 
 ## 🎯 Solutions
 
-This repository holds the bicep code to deploy,
+We will use Azure Monitor Agent<sup>[1]</sup> to collect the application logs from a specified location(_for exampe: `/var/log/miztiik*.json`_) and push them to a Log Analytics Workspace<sup>[3]</sup>. To receive the logs in the correct format we need to define a custom table<sup>[5],[6]</sup> and a data collection rule. The rule will collect logs from our _source_(VM App), transform the logs using Kusto Query Language(KQL) to a structure defined in the custom table and store them in the _sink_(log analytics workspace).
+
+This repository holds the bicep code to deploy the necessary infrastructure for this demo,
 - Virtual Machine(RedHat) inside a Vnet with public access.
-  - Bootstrapped with custom libs using `customData` script
+  - Bootstrapped with custom libs using `customData` script.
 - Log Analytics Workspace
-dddd- Data Collection Rule - To collate, transform and push the custom logs from the VM to custom() table in log analytics workspace
+  - Custom Table
+  - Data Collection Endpoint - With publicaccess
+  - Data Collection Rule
+    - Configured with the log location, KQL query and custom table
 
 
 ![Miztiik Automaton: Create Azure VM](images/miztiik_automation_create_azure_vm_architecture_001.png)
@@ -27,8 +32,8 @@ dddd- Data Collection Rule - To collate, transform and push the custom logs from
    - Get the application code
 
      ```bash
-     git clone https://github.com/miztiik/azure-create-vm
-     cd azure-create-vm
+     https://github.com/miztiik/send-vm-logs-to-azure-monitor
+     cd send-vm-logs-to-azure-monitor
      ```
 
 3. ## 🚀 Prepare the environment
@@ -64,39 +69,75 @@ dddd- Data Collection Rule - To collate, transform and push the custom logs from
    Let us walk through each of the stacks,
 
    - **Stack: Main Bicep**
-     The helper deployment script `deploy.sh` will deploy the `main.bicep` file. This will inturn call the modules for RG,VNet & VM creation
+     The params required for the modules are in `params.json`. Do modify them to suit your need.(_Especially the `adminPassword.secureString` for the VM. You are strongly encouraged to Just-In-Time access or use SSH key instead of password based authentication_). The helper deployment script `deploy.sh` will deploy the `main.bicep` file. This will inturn call the modules for Resource Group(RG), VNet & Virtual Machine, Log analytics workspace, Custom table, Data collection endpoint, Data collection rule(DCR) and finally attach the DCR to the VM.
 
      ```bash
      sh deploy.sh
      ```
 
-     After successfully deploying the stack, Check the `Outputs` section of the stack for the resources.
+     This stack will create almost all of the resoureces. The RG is created as a deployment at the subscription level. The other resources are deployments at resource group level. 
+
+     - **Virtual Machine** - A Redhat vm is bootstrapped using `customData` to install python3, git. We will use a bash script `generate_data.sh`. It will generate a json conformant log in this location `/var/log/miztiik-yyyy-MM-dd.json` for example _`/var/log/miztiik-2023-04-03.json`_. All new entries are appended to the file with `new-line` being the delimitter as expected by Azure Custom Logs.
+
+        ```json
+        {"request_id": "08b6b258-c6d6-44ff-802e-69d52422095a", "event_type": "inventory_event", "store_id": 45, "cust_id": 4416, "category": "Camera", "sku": 17293, "price": 44.61, "qty": 15
+        , "discount": 73.2, "gift_wrap": 0, "variant": "MystiqueAutomatoon", "priority_shipping": 1, "TimeGenerated": "2023-04-03T10:54:23", "contact_me": "github.com/miztiik" }
+        {"request_id": "60051c39-6817-4f52-bd8f-59cc9a38be0f", "event_type": "inventory_event", "store_id": 64, "cust_id": 4081, "category": "Camera", "sku": 17815, "price": 50.92, "qty": 16
+        , "discount": 29.2, "gift_wrap": 1, "variant": "MystiqueAutomatoon", "priority_shipping": 0, "TimeGenerated": "2023-04-03T10:54:24", "contact_me": "github.com/miztiik" }
+        {"request_id": "f340f343-fc0f-40a1-b9f5-2abdd14b929d", "event_type": "inventory_event", "store_id": 35, "cust_id": 338, "category": "Camera", "sku": 16158, "price": 53.76, "qty": 13,
+        "discount": 34.3, "gift_wrap": 1, "variant": "MystiqueAutomatoon", "priority_shipping": 0, "TimeGenerated": "2023-04-03T10:54:25", "contact_me": "github.com/miztiik" }
+        ```
+        
+        Formatting a single log line entry properly, will look like this,
+
+        ```json
+        {
+          "request_id": "f5570d0f-5389-4bce-98c3-7ed5380eefb2",
+          "event_type": "inventory_event",
+          "store_id": 6,
+          "cust_id": 206,
+          "category": "Camera",
+          "sku": 100657,
+          "price": 2.52,
+          "qty": 18,
+          "discount": 8.2,
+          "gift_wrap": true,
+          "variant": "red",
+          "priority_shipping": true,
+          "TimeGenerated": "2021-04-25T12:52:40.938937",
+          "contact_me": "github.com/miztiik"
+        }
+        ```
+
+     After successfully deploying the stack, Check the `Resource Groups/Deployments` section for the resources.
 
 
 5. ## 🔬 Testing the solution
 
    1. **Connect to the VM**
 
+    Connect to the VM using Just-In-Time access. This should allow your IP/IP list to securelly connect to your VM using private IP address. Use the password you updated in the `params.json`
+
     ```bash
     ssh miztiik@publicIP
     ```
 
-    You should be able to connect to this server on port `22` from the internet. This is should not be the case in production. You would want to secure that with restricted to private IP space or use a bastion or just-in-time access.
+    
 
   1. **Troubleshooting Azure Monitor Agent**
 
-    - In case if you are facing issues, log into the VM and check the logs `/var/log/azure/Microsoft.Azure.Monitor.AzureMonitorLinuxAgent/` for potential causes.
-    - From the portal, you can query to find if the agent is reporting to Azure Monitor
+      - In case if you are facing issues, log into the  VM and check the logs `/var/log/azure/Microsoft.Azure.Monitor.AzureMonitorLinuxAgent/` for potential causes.
+      - From the portal, you can query to find if the agent is reporting to Azure Monitor
 
-    ```sh
-    Heartbeat | where Category == "Azure Monitor Agent" and Computer == "<computer-name>" | take 10
-    ```
+        ```sh
+        Heartbeat | where Category == "Azure Monitor Agent" and Computer == "<computer-name>" | take 10
+        ```
 
-    Check if the AMA is running,
+        Check if the AMA is running,
 
-    ```sh
-    systemctl status azuremonitoragent
-    ```
+        ```sh
+        systemctl status azuremonitoragent
+        ```
 
       
 6. ## 📒 Conclusion
@@ -138,7 +179,7 @@ Thank you for your interest in contributing to our project. Whether it is a bug 
 
 1. [Azure Docs: Collect text logs with Azure Monitor Agent][3]
 1. [Azure Docs: Collect text logs with Log Analytics Agent][4]
-1. [Azure Docs: Workspace Table Creation][5]
+1. [Azure Docs: Custom Table][5]
 1. [Azure Docs: Workspace Table Creation][6]
 1. [Azure Docs: Log Data Plan Basic-vs-Analytics Comparison][7]
 1. [Azure Docs: Custom Log Ingestion using python SDK][8]
@@ -158,8 +199,8 @@ Thank you for your interest in contributing to our project. Whether it is a bug 
 [2]: https://learn.microsoft.com/en-us/azure/azure-monitor/agents/agents-overview#compare-to-legacy-agents
 [3]: https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-text-log
 [4]: https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-custom-logs
-[5]: https://learn.microsoft.com/en-us/azure/templates/microsoft.operationalinsights/workspaces/tables?pivots=deployment-language-bicep
-[6]: https://learn.microsoft.com/en-us/azure/templates/microsoft.operationalinsights/2021-06-01/workspaces/tables?tabs=bicep
+[5]: https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-text-log?tabs=portal#create-a-custom-table
+[6]: https://learn.microsoft.com/en-us/azure/templates/microsoft.operationalinsights/workspaces/tables?pivots=deployment-language-bicep
 [7]: https://learn.microsoft.com/en-us/azure/azure-monitor/logs/basic-logs-configure?tabs=portal-1
 [8]: https://learn.microsoft.com/en-us/python/api/overview/azure/monitor-ingestion-readme?view=azure-python
 [9]: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/metrics-custom-overview
