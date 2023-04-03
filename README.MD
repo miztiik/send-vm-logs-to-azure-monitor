@@ -27,7 +27,7 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
    - 🛠 Bicep Installed & Configured - [Get help here](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install)
    - 🛠 VS Code & Bicep Extenstions - [Get help here](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#vs-code-and-bicep-extension)
 
-2. ## ⚙️ Setting up the environment
+1. ## ⚙️ Setting up the environment
 
    - Get the application code
 
@@ -36,7 +36,7 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
      cd send-vm-logs-to-azure-monitor
      ```
 
-3. ## 🚀 Prepare the environment
+1. ## 🚀 Prepare the environment
 
    Let check you have Azure Cli working with 
 
@@ -64,7 +64,7 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
     }
    ```
 
-4. ## 🚀 Deploying the application
+1. ## 🚀 Deploying the application
 
    Let us walk through each of the stacks,
 
@@ -112,7 +112,7 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
      After successfully deploying the stack, Check the `Resource Groups/Deployments` section for the resources.
 
 
-5. ## 🔬 Testing the solution
+1. ## 🔬 Testing the solution
 
    1. **Connect to the VM**
 
@@ -160,10 +160,11 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
         ```
 
       
-6. ## 📒 Conclusion
+1. ## 📒 Conclusion
 
-Here we have demonstrated how to configure a VM to send application logs to Azure monitor. You can extend the solution to setup alerts on these logs or secure the data collection endpoing to use a private link etc.,
-2. ## 🧹 CleanUp
+    Here we have demonstrated how to configure a VM to send application logs to Azure monitor. You can extend the solution to setup alerts on these logs or secure the data collection endpoing to use a private link etc.,
+
+1. ## 🧹 CleanUp
 
 If you want to destroy all the resources created by the stack, Execute the below command to delete the stack, or _you can delete the stack from console as well_
 
