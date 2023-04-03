@@ -1,0 +1,17 @@
+{
+    "request_id": "f5570d0f-5389-4bce-98c3-7ed5380eefb2",
+    "event_type": "inventory_event",
+    "store_id": 6,
+    "cust_id": 206,
+    "category": "Camera",
+    "sku": 100657,
+    "price": 2.52,
+    "qty": 18,
+    "discount": 8.2,
+    "gift_wrap": true,
+    "variant": "red",
+    "priority_shipping": true,
+    "TimeGenerated": "2021-04-25T12:52:40.938937",
+    "contact_me": "github.com/miztiik"
+  }
+
