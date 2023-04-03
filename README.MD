@@ -17,7 +17,7 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
     - Configured with the log location, KQL query and custom table
 
 
-![Miztiik Automaton: Create Azure VM](images/miztiik_automation_create_azure_vm_architecture_001.png)
+![Miztiik Automaton: Send Virtual Machine logs to azure monitor](images/miztiik_automation_create_azure_vm_architecture_001.png)
 
 1. ## 🧰 Prerequisites
 
@@ -122,7 +122,27 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
     ssh miztiik@publicIP
     ```
 
+   1. **Generate Log Data**
+
+    For some reason the customData, bootstrap script fails, will fix it later. Until then manually copy the `generate_data.sh` from this repo to the server. _You may need elevated privileges to create log file in `/var/log`.
+
+
+    ```bash
+    sudo su
+    cd /var/log/
+    # Copy generate_data.sh to the server
+    sh generate_data.sh &
+    ```
+
+    The script by default is configured to write one log entry every `5` seconds and generate a total `100000` log lines to`/var/log/miztiik*.json`
+
     
+   1. **Query in Azure Log Analytics Workspace**
+
+    Login to Azure Log Anaytics portal. You should be able to find it under `/Miztiik_Enterprises_Custom_Logs_To_Monitor_xxx/providers/Microsoft.OperationalInsights/workspaces/lumberyard-payGTier-xxx",`. Navigate to logs, select the custom table(`lumberyardTablexxx_CL`) & `Run`
+
+    ![Miztiik Automaton: Send Virtual Machine logs to azure monitor](images/miztiik_automation_create_azure_vm_architecture_003.png)
+  
 
   1. **Troubleshooting Azure Monitor Agent**
 
@@ -142,8 +162,7 @@ This repository holds the bicep code to deploy the necessary infrastructure for 
       
 6. ## 📒 Conclusion
 
-Here we have demonstrated how to bicep to create Resource groups, Vnets and VMs
-
+Here we have demonstrated how to configure a VM to send application logs to Azure monitor. You can extend the solution to setup alerts on these logs or secure the data collection endpoing to use a private link etc.,
 2. ## 🧹 CleanUp
 
 If you want to destroy all the resources created by the stack, Execute the below command to delete the stack, or _you can delete the stack from console as well_
@@ -153,8 +172,8 @@ If you want to destroy all the resources created by the stack, Execute the below
 
 ```bash
 # Delete from resource group
-az group delete --name Miztiik_Enterprises_001 --yes
-# Follow any on-screen prompts
+az group delete --name Miztiik_Enterprises_xxx --yes
+# Follow any on-screen prompt
 ```
 
 This is not an exhaustive list, please carry out other necessary steps as maybe applicable to your needs.
@@ -176,7 +195,6 @@ Thank you for your interest in contributing to our project. Whether it is a bug 
 
 1. [Azure Docs: Azure Monitor Agent Overview][1]
 1. [Azure Docs: Azure Monitor Agents -vs- Other Agatnes Overview][2]
-
 1. [Azure Docs: Collect text logs with Azure Monitor Agent][3]
 1. [Azure Docs: Collect text logs with Log Analytics Agent][4]
 1. [Azure Docs: Custom Table][5]

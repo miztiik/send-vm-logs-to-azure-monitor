@@ -1,0 +1,15 @@
+YourTableName
+| extend parsed = parse_json(RawData)
+| project request_id = parsed.request_id,
+          event_type = parsed.event_type,
+          store_id = parsed.store_id,
+          cust_id = parsed.cust_id,
+          category = parsed.category,
+          sku = parsed.sku,
+          price = parsed.price,
+          qty = parsed.qty,
+          discount = parsed.discount,
+          gift_wrap = parsed.gift_wrap,
+          variant = parsed.variant,
+          priority_shipping = parsed.priority_shipping,
+          TimeGenerated = parsed.TimeGenerated

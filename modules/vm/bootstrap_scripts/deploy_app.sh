@@ -1,5 +1,6 @@
 #!/bin/bash
 # set -ex
+set x
 set -o pipefail
 
 # version: 03Apr2023
@@ -42,13 +43,12 @@ unassume_role() {
 }
 
 function clone_git_repo(){
-    install_libs
     # mkdir -p /var/
     cd /var
     git clone $GIT_REPO_URL
-    cd /var/$GIT_REPO_URL
-    chmod 700 /var/$GIT_REPO_URL/generate_data.sh
-    sh /var/$GIT_REPO_URL/generate_data.sh &
+    cd /var/$REPO_NAME
+    chmod 700 /var/$REPO_NAME/generate_data.sh
+    sh /var/$REPO_NAME/generate_data.sh &
 }
 
 function add_env_vars(){
